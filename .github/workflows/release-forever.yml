@@ -1,0 +1,55 @@
+name: Build Forever release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Read addon version
+        id: version
+        shell: bash
+        run: |
+          VERSION=$(awk -F': ' '/^## Version:/ {print $2}' ForeverThreat.toc | tr -d '\r')
+          if [ -z "$VERSION" ]; then
+            echo "Could not read ## Version from ForeverThreat.toc"
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Build WoWUp Forever package
+        shell: bash
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          rm -rf package
+          mkdir -p package/ForeverThreat
+          cp ForeverThreat.lua ForeverThreat.toc README.md package/ForeverThreat/
+          cd package
+          zip -r "../ForeverThreat-v${VERSION}-forever.zip" ForeverThreat
+
+      - name: Create or update GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        shell: bash
+        run: |
+          TAG="v${VERSION}"
+          ASSET="ForeverThreat-v${VERSION}-forever.zip"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$ASSET" --clobber
+          else
+            gh release create "$TAG" "$ASSET" \
+              --target "$GITHUB_SHA" \
+              --title "ForeverThreat ${TAG}" \
+              --notes "WoW Forever package for ForeverThreat ${TAG}."
+          fi
