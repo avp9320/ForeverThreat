@@ -40,6 +40,12 @@ When you are currently tanking the target, ForeverThreat watches the highest thr
 
 ## Install
 
+### WoWUp
+
+GitHub releases include a WoW Forever package named `ForeverThreat-vX.Y.Z-forever.zip`, which allows WoWUp to install the addon from this repository.
+
+### Manual
+
 Copy the addon files into a `ForeverThreat` folder inside your WoW Forever AddOns folder and restart the game if this is the first installation.
 
 The folder should contain:
@@ -53,5 +59,7 @@ The folder should contain:
 ForeverThreat uses WoW's native `UnitDetailedThreatSituation` API. It does not parse the combat log and has no external addon dependency.
 
 The strip anchors to the stock target frame's resource bars when available, with fallbacks for UI variants. Because it is parented to the target frame, it follows the target frame automatically if you move or scale that frame through the game UI.
+
+The repository includes a GitHub Actions release workflow that builds the `-forever.zip` release asset WoWUp expects whenever a release package is generated.
 
 Version: 0.2.0
