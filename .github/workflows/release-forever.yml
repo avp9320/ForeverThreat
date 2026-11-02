@@ -33,7 +33,7 @@ jobs:
           VERSION="${{ steps.version.outputs.version }}"
           rm -rf package
           mkdir -p package/ForeverThreat
-          cp ForeverThreat.lua ForeverThreat.toc README.md package/ForeverThreat/
+          cp ForeverThreat.toc *.lua README.md package/ForeverThreat/
           cd package
           zip -r "../ForeverThreat-v${VERSION}-forever.zip" ForeverThreat
 
