@@ -1,9 +1,10 @@
-## Interface: 120100
+## Interface: 16001
 ## Title: ForeverThreat
 ## Notes: Minimal threat status attached directly to your target frame for WoW Forever.
 ## Author: Andy VanderPloeg & ChatGPT
-## Version: 0.2.0
+## Version: 0.2.1
 ## SavedVariables: ForeverThreatDB
 ## Category: Combat
 
 ForeverThreat.lua
+Debug.lua
