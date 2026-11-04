@@ -2,7 +2,7 @@
 ## Title: ForeverThreat
 ## Notes: Minimal threat status attached directly to your target frame for WoW Forever.
 ## Author: Andy VanderPloeg & ChatGPT
-## Version: 0.2.2
+## Version: 0.2.3
 ## SavedVariables: ForeverThreatDB
 ## Category: Combat
 

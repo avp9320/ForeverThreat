@@ -82,20 +82,32 @@ end
 -- ForeverThreat deliberately attaches to the stock target frame instead of
 -- creating another movable combat window. The target health/mana globals are
 -- used when available, with fallbacks for UI variants.
-local strip = CreateFrame("StatusBar", "ForeverThreatTargetStrip", UIParent)
-strip:SetHeight(11)
-strip:SetMinMaxValues(0, 100)
-strip:SetValue(0)
-strip:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
+-- A compact threat readout, not a third health/power bar.  It lives just
+-- below the right end of the target's resource bar, inside its visual stack.
+local strip = CreateFrame("Frame", "ForeverThreatTargetStrip", UIParent)
+strip:SetSize(76, 15)
 strip:Hide()
 
-local background = strip:CreateTexture(nil, "BACKGROUND")
-background:SetAllPoints()
-background:SetColorTexture(0.04, 0.04, 0.04, 0.90)
+local border = strip:CreateTexture(nil, "BACKGROUND")
+border:SetAllPoints()
+border:SetColorTexture(0.32, 0.26, 0.13, 0.88)
+
+local background = strip:CreateTexture(nil, "BORDER")
+background:SetPoint("TOPLEFT", strip, "TOPLEFT", 1, -1)
+background:SetPoint("BOTTOMRIGHT", strip, "BOTTOMRIGHT", -1, 1)
+background:SetColorTexture(0.025, 0.025, 0.03, 0.94)
+
+local accent = strip:CreateTexture(nil, "ARTWORK")
+accent:SetPoint("TOPLEFT", strip, "TOPLEFT", 2, -2)
+accent:SetPoint("BOTTOMLEFT", strip, "BOTTOMLEFT", 2, 2)
+accent:SetWidth(3)
+accent:SetColorTexture(0.85, 0.70, 0.10, 1)
 
 local text = strip:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-text:SetPoint("CENTER", strip, "CENTER", 0, 0)
-text:SetJustifyH("CENTER")
+text:SetPoint("LEFT", accent, "RIGHT", 4, 0)
+text:SetPoint("RIGHT", strip, "RIGHT", -5, 0)
+text:SetJustifyH("RIGHT")
+text:SetTextColor(0.95, 0.95, 0.88)
 text:SetText("")
 
 local attached = false
@@ -133,17 +145,14 @@ local function AttachToTargetFrame()
     strip:SetParent(targetFrame)
     strip:ClearAllPoints()
 
-    -- Put the threat strip directly beneath the target's resource bars. This
-    -- keeps health, power and threat in one compact visual stack.
+    -- A small right-anchored chip follows the existing target frame rather
+    -- than stretching into a mismatched full-width status bar.
     if manaBar then
-        strip:SetPoint("TOPLEFT", manaBar, "BOTTOMLEFT", 0, -2)
         strip:SetPoint("TOPRIGHT", manaBar, "BOTTOMRIGHT", 0, -2)
     elseif healthBar then
-        strip:SetPoint("TOPLEFT", healthBar, "BOTTOMLEFT", 0, -14)
-        strip:SetPoint("TOPRIGHT", healthBar, "BOTTOMRIGHT", 0, -14)
+        strip:SetPoint("TOPRIGHT", healthBar, "BOTTOMRIGHT", 0, -16)
     else
-        strip:SetWidth(119)
-        strip:SetPoint("TOP", targetFrame, "TOP", 0, -66)
+        strip:SetPoint("TOPRIGHT", targetFrame, "TOPRIGHT", -82, -67)
     end
 
     if strip.SetFrameLevel and targetFrame.GetFrameLevel then
@@ -164,54 +173,43 @@ local function TargetFrameVisible()
 end
 
 local function SetColor(r, g, b)
-    strip:SetStatusBarColor(r, g, b, 0.95)
+    accent:SetColorTexture(r, g, b, 1)
 end
 
+-- Label makes it clear whether we are showing our threat (THR) or
+-- the highest groupmate threat while tanking (OTH). Color signals urgency.
 local function RenderDamageMode(scaledPct, status)
     local pct = tonumber(scaledPct) or 0
     local displayPct = math.floor(pct + 0.5)
-
-    strip:SetMinMaxValues(0, 100)
-    strip:SetValue(Clamp(pct, 0, 100))
-
     if status and status >= 2 then
-        text:SetText("AGGRO  •  " .. displayPct .. "%")
-        SetColor(0.85, 0.12, 0.10)
-    elseif pct >= 90 then
-        text:SetText("DANGER  •  " .. displayPct .. "%")
-        SetColor(0.92, 0.38, 0.08)
-    elseif pct >= 80 then
-        text:SetText("WATCH  •  " .. displayPct .. "%")
-        SetColor(0.88, 0.72, 0.08)
+        text:SetText("AGGRO")
+        SetColor(0.95, 0.24, 0.18)
     else
-        text:SetText("SAFE  •  " .. displayPct .. "%")
-        SetColor(0.16, 0.68, 0.28)
+        text:SetText("THR " .. displayPct .. "%")
+        if pct >= 90 then
+            SetColor(0.95, 0.40, 0.12)
+        elseif pct >= 80 then
+            SetColor(0.95, 0.76, 0.14)
+        else
+            SetColor(0.26, 0.74, 0.38)
+        end
     end
 end
 
 local function RenderTankMode(otherPct)
-    strip:SetMinMaxValues(0, 100)
-
     if otherPct == nil then
-        strip:SetValue(0)
         text:SetText("TANKING")
-        SetColor(0.16, 0.68, 0.28)
+        SetColor(0.26, 0.74, 0.38)
         return
     end
-
     local pct = tonumber(otherPct) or 0
-    local displayPct = math.floor(pct + 0.5)
-    strip:SetValue(Clamp(pct, 0, 100))
-
+    text:SetText("OTH " .. math.floor(pct + 0.5) .. "%")
     if pct >= 95 then
-        text:SetText("LOSING  •  " .. displayPct .. "%")
-        SetColor(0.85, 0.12, 0.10)
+        SetColor(0.95, 0.24, 0.18)
     elseif pct >= 85 then
-        text:SetText("WATCH  •  " .. displayPct .. "%")
-        SetColor(0.92, 0.38, 0.08)
+        SetColor(0.95, 0.76, 0.14)
     else
-        text:SetText("HOLDING  •  " .. displayPct .. "%")
-        SetColor(0.16, 0.68, 0.28)
+        SetColor(0.26, 0.74, 0.38)
     end
 end
 
@@ -220,11 +218,8 @@ local function RenderTest()
         strip:Hide()
         return
     end
-
-    strip:SetMinMaxValues(0, 100)
-    strip:SetValue(87)
-    text:SetText("WATCH  •  87%")
-    SetColor(0.88, 0.72, 0.08)
+    text:SetText("THR 87%")
+    SetColor(0.95, 0.76, 0.14)
     strip:Show()
 end
 

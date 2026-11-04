@@ -2,7 +2,7 @@
 
 A tiny threat indicator built for **WoW Forever**.
 
-ForeverThreat does not create another combat meter window and does not use overhead enemy nameplates. Instead, it attaches a thin threat strip directly to the **enemy target frame** you already look at for health and power.
+ForeverThreat does not create another combat meter window and does not use overhead enemy nameplates. Instead, it attaches a compact threat badge directly to the **enemy target frame** you already look at for health and power.
 
 ## Default behavior
 
@@ -15,24 +15,19 @@ ForeverThreat does not create another combat meter window and does not use overh
 
 ### DPS / non-tank display
 
-- **SAFE** below 80%
-- **WATCH** at 80-89%
-- **DANGER** at 90-99%
-- **AGGRO** when you have pulled the target
+- Compact `THR 87%` readout (your relative threat)
+- Green below 80%, yellow from 80%, orange from 90%
+- Red `AGGRO` if you pull threat
 
-Example: `WATCH • 87%`
+The color indicator replaces the old full-width bar and long warning label.
 
 ### Tank display
 
-When you are currently tanking the target, ForeverThreat watches the highest threat among the rest of the group:
-
-- **HOLDING** while the group is comfortably behind you
-- **WATCH** when another player reaches 85%+
-- **LOSING** when another player reaches 95%+
+Shows `OTH 87%` for the highest other group member's relative threat, with yellow at 85% and red at 95%. When other players have no measurable threat, shows `TANKING`.
 
 ## Commands
 
-- `/fthreat test` - preview the target-frame strip; target anything first so the target frame is visible
+- `/fthreat test` - preview the target-frame badge; target anything first so the target frame is visible
 - `/fthreat solo` - toggle display while solo
 - `/fthreat show` - enable
 - `/fthreat hide` - disable
@@ -58,8 +53,8 @@ The folder should contain:
 
 ForeverThreat uses WoW's native `UnitDetailedThreatSituation` API. It does not parse the combat log and has no external addon dependency.
 
-The strip anchors to the stock target frame's resource bars when available, with fallbacks for UI variants. Because it is parented to the target frame, it follows the target frame automatically if you move or scale that frame through the game UI.
+The badge anchors to the right end of the stock target frame's resource bars when available, with fallbacks for UI variants. Because it is parented to the target frame, it follows the target frame automatically if you move or scale that frame through the game UI.
 
 The repository includes a GitHub Actions release workflow that builds the `-forever.zip` release asset WoWUp expects whenever a release package is generated.
 
-Version: 0.2.0
+Version: 0.2.3
