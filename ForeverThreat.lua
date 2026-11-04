@@ -20,6 +20,12 @@ local function Clamp(value, low, high)
     return value
 end
 
+local function IsSecret(value)
+    if type(issecretvalue) ~= "function" then return false end
+    local ok, result = pcall(issecretvalue, value)
+    return ok and result == true
+end
+
 local function IsGrouped()
     if IsInRaid and IsInRaid() then return true end
     if IsInGroup and IsInGroup() then return true end
@@ -39,7 +45,7 @@ local function ThreatFor(unit)
     local ok, isTanking, status, scaledPct, rawPct, threatValue =
         pcall(UnitDetailedThreatSituation, unit, "target")
 
-    if not ok then return nil end
+    if not ok or IsSecret(isTanking) or IsSecret(status) or IsSecret(scaledPct) then return nil end
     return isTanking, status, scaledPct, rawPct, threatValue
 end
 
@@ -188,7 +194,7 @@ local function RenderTankMode(otherPct)
 
     if otherPct == nil then
         strip:SetValue(0)
-        text:SetText("HOLDING")
+        text:SetText("TANKING")
         SetColor(0.16, 0.68, 0.28)
         return
     end
@@ -263,13 +269,18 @@ local function UpdateThreat()
     strip:Show()
 end
 
+local function SafeUpdateThreat()
+    local ok = pcall(UpdateThreat)
+    if not ok then strip:Hide() end
+end
+
 local elapsedSinceUpdate = 0
 local updater = CreateFrame("Frame")
 updater:SetScript("OnUpdate", function(_, elapsed)
     elapsedSinceUpdate = elapsedSinceUpdate + elapsed
     if elapsedSinceUpdate >= 0.15 then
         elapsedSinceUpdate = 0
-        UpdateThreat()
+        SafeUpdateThreat()
     end
 end)
 
@@ -289,12 +300,12 @@ events:SetScript("OnEvent", function(_, event, arg1)
         ForeverThreatDB = ForeverThreatDB or {}
         CopyDefaults(ForeverThreatDB, DEFAULTS)
         AttachToTargetFrame()
-        UpdateThreat()
+        SafeUpdateThreat()
     elseif ForeverThreatDB then
         if event == "PLAYER_LOGIN" or event == "PLAYER_ENTERING_WORLD" then
             AttachToTargetFrame()
         end
-        UpdateThreat()
+        SafeUpdateThreat()
     end
 end)
 
@@ -313,11 +324,11 @@ SlashCmdList.FOREVERTHREAT = function(msg)
         else
             print("|cff66ccffForeverThreat:|r test mode OFF.")
         end
-        UpdateThreat()
+        SafeUpdateThreat()
     elseif msg == "show" then
         ForeverThreatDB.enabled = true
         print("|cff66ccffForeverThreat:|r enabled.")
-        UpdateThreat()
+        SafeUpdateThreat()
     elseif msg == "hide" then
         ForeverThreatDB.enabled = false
         strip:Hide()
@@ -325,14 +336,14 @@ SlashCmdList.FOREVERTHREAT = function(msg)
     elseif msg == "solo" then
         ForeverThreatDB.showSolo = not ForeverThreatDB.showSolo
         print("|cff66ccffForeverThreat:|r show while solo: " .. (ForeverThreatDB.showSolo and "ON" or "OFF"))
-        UpdateThreat()
+        SafeUpdateThreat()
     elseif msg == "reset" then
         ForeverThreatDB.enabled = DEFAULTS.enabled
         ForeverThreatDB.showSolo = DEFAULTS.showSolo
         ForeverThreatDB.testMode = DEFAULTS.testMode
         AttachToTargetFrame()
         print("|cff66ccffForeverThreat:|r settings reset.")
-        UpdateThreat()
+        SafeUpdateThreat()
     else
         print("|cff66ccffForeverThreat commands:|r")
         print("  /fthreat test - preview the target-frame threat strip")
