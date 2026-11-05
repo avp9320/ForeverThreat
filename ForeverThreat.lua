@@ -197,7 +197,14 @@ local function RenderDamageMode(scaledPct, status)
     end
 end
 
-local function RenderTankMode(otherPct)
+local function RenderTankMode(otherPct, isTanking, status)
+    -- A tank who loses the target must not see a reassuring green OTH badge.
+    -- Only report loss when the threat API supplies a definite ownership state.
+    if isTanking == false and type(status) == "number" and status < 2 then
+        text:SetText("LOST AGGRO")
+        SetColor(0.95, 0.24, 0.18)
+        return
+    end
     if otherPct == nil then
         text:SetText("TANKING")
         SetColor(0.26, 0.74, 0.38)
@@ -270,7 +277,7 @@ local function UpdateThreat()
     end
 
     if IsTankRole() then
-        RenderTankMode(HighestOtherThreat())
+        RenderTankMode(HighestOtherThreat(), isTanking, status)
     else
         RenderDamageMode(scaledPct, status)
     end
