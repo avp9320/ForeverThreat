@@ -62,4 +62,4 @@ The badge anchors to the right end of the stock target frame's resource bars whe
 
 The repository includes a GitHub Actions release workflow that builds the `-forever.zip` release asset WoWUp expects whenever a release package is generated.
 
-Version: 0.2.3
+Version: 0.2.4
