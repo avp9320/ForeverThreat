@@ -21,6 +21,10 @@ ForeverThreat does not create another combat meter window and does not use overh
 
 The color indicator replaces the old full-width bar and long warning label.
 
+### Role selection
+
+`/fthreat role auto|tank|dps` selects the display. Auto uses the assigned group role when available; otherwise it defaults to DPS-style threat, so a DPS player who pulls aggro sees `AGGRO` instead of being mistaken for a tank. Tanks in groups without assigned roles should use `/fthreat role tank` (saved across sessions). `/fthreat reset` restores auto.
+
 ### Tank display
 
 Shows `OTH 87%` for the highest other group member's relative threat, with yellow at 85% and red at 95%. When other players have no measurable threat, shows `TANKING`.
@@ -29,6 +33,7 @@ Shows `OTH 87%` for the highest other group member's relative threat, with yello
 
 - `/fthreat test` - preview the target-frame badge; target anything first so the target frame is visible
 - `/fthreat solo` - toggle display while solo
+- `/fthreat role auto|tank|dps` - select role detection or override
 - `/fthreat show` - enable
 - `/fthreat hide` - disable
 - `/fthreat reset` - reset ForeverThreat settings
