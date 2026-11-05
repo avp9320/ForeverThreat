@@ -18,3 +18,8 @@ This is a release gate, not a claim of implementation. README claims and static 
 ## Status
 
 Pre-1.0. Features described in README may be implemented but are not accepted as verified here until tested. Avoid declaring v1.0 solely on version metadata.
+
+## Phase 1 implementation — tank aggro loss (2026-11-05)
+
+- [x] Tank display now distinguishes confirmed lost target ownership from healthy tanking: `ForeverThreat.lua` `RenderTankMode` receives the player's `isTanking` and status from `UnitDetailedThreatSituation` and shows red `LOST AGGRO` when the API definitively reports non-tanking status below 2 (commit `84c0c2d`). No guessed threat data is introduced; DPS display and saved settings remain unchanged.
+- [ ] Verify with assigned tank and `/fthreat role tank`: tank owns target, another player takes aggro, target regained, API reports unknown status, and group roster changes. Code inspected only; no Lua harness or live client evidence.
