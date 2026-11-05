@@ -4,6 +4,7 @@ local DEFAULTS = {
     enabled = true,
     showSolo = false,
     testMode = false,
+    roleMode = "auto", -- auto uses assigned group role; explicit tank/dps overrides it
 }
 
 local function CopyDefaults(target, defaults)
@@ -213,6 +214,19 @@ local function RenderTankMode(otherPct)
     end
 end
 
+-- Threat ownership is not a reliable indication of tank specialization: a DPS
+-- player who pulls aggro must still see AGGRO rather than a tank readout.
+local function IsTankRole()
+    local mode = ForeverThreatDB and ForeverThreatDB.roleMode or "auto"
+    if mode == "tank" then return true end
+    if mode == "dps" then return false end
+    if type(UnitGroupRolesAssigned) == "function" then
+        local ok, role = pcall(UnitGroupRolesAssigned, "player")
+        if ok and not IsSecret(role) and role == "TANK" then return true end
+    end
+    return false -- Unassigned roles are DPS-safe; /fthreat role tank overrides.
+end
+
 local function RenderTest()
     if not TargetFrameVisible() then
         strip:Hide()
@@ -255,7 +269,7 @@ local function UpdateThreat()
         return
     end
 
-    if isTanking or status == 2 or status == 3 then
+    if IsTankRole() then
         RenderTankMode(HighestOtherThreat())
     else
         RenderDamageMode(scaledPct, status)
@@ -328,6 +342,15 @@ SlashCmdList.FOREVERTHREAT = function(msg)
         ForeverThreatDB.enabled = false
         strip:Hide()
         print("|cff66ccffForeverThreat:|r disabled.")
+    elseif msg:match("^role%s+") then
+        local mode = msg:match("^role%s+(%S+)$")
+        if mode == "auto" or mode == "tank" or mode == "dps" then
+            ForeverThreatDB.roleMode = mode
+            print("|cff66ccffForeverThreat:|r role mode: " .. mode)
+            SafeUpdateThreat()
+        else
+            print("|cff66ccffForeverThreat:|r use /fthreat role auto|tank|dps")
+        end
     elseif msg == "solo" then
         ForeverThreatDB.showSolo = not ForeverThreatDB.showSolo
         print("|cff66ccffForeverThreat:|r show while solo: " .. (ForeverThreatDB.showSolo and "ON" or "OFF"))
@@ -336,6 +359,7 @@ SlashCmdList.FOREVERTHREAT = function(msg)
         ForeverThreatDB.enabled = DEFAULTS.enabled
         ForeverThreatDB.showSolo = DEFAULTS.showSolo
         ForeverThreatDB.testMode = DEFAULTS.testMode
+        ForeverThreatDB.roleMode = DEFAULTS.roleMode
         AttachToTargetFrame()
         print("|cff66ccffForeverThreat:|r settings reset.")
         SafeUpdateThreat()
@@ -343,6 +367,7 @@ SlashCmdList.FOREVERTHREAT = function(msg)
         print("|cff66ccffForeverThreat commands:|r")
         print("  /fthreat test - preview the target-frame threat strip")
         print("  /fthreat solo - toggle display while solo")
+        print("  /fthreat role auto|tank|dps - choose threat display role")
         print("  /fthreat show - enable")
         print("  /fthreat hide - disable")
         print("  /fthreat reset - reset settings")
